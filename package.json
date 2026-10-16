@@ -18,7 +18,8 @@
     "cost": "ts-node scripts/cost.ts",
     "deploy": "npm run bundle && cdk deploy",
     "destroy": "cdk destroy",
-    "smoke": "ts-node scripts/smoke-test.ts"
+    "smoke": "ts-node scripts/smoke-test.ts",
+    "mutate": "npm run bundle && ts-node scripts/mutation-check.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1152.0",

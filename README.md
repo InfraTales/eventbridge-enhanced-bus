@@ -49,6 +49,7 @@ npm ci
 npm run check      # type check, lint, bundle, unit + infra tests, synth with cdk-nag
 docker run -d --rm -p 8025:8000 amazon/dynamodb-local:3.3.2
 AWS_ENDPOINT_URL_DYNAMODB=http://localhost:8025 npm run test:int
+AWS_ENDPOINT_URL_DYNAMODB=http://localhost:8025 npm run mutate   # break each safeguard, check a test fails
 npm run cost       # monthly cost tables, enhanced vs Classic bus
 ```
 
