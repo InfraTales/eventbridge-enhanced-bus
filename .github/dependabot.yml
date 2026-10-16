@@ -12,6 +12,9 @@ updates:
       # APIs that don't exist in production. Move this with the runtime.
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
+      # typescript-eslint supports TypeScript 5.x only. Stay on ~5.9 until it supports 7.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
     groups:
       aws-sdk:
         patterns: ['@aws-sdk/*']
