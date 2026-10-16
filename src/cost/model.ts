@@ -46,6 +46,12 @@ export interface EnhancedInput {
   failureRate?: number;
   retriesPerFailure?: number;
   daysInMonth?: number;
+  /**
+   * Events read again by a subscriber with a past starting position (a replay).
+   * ASSUMPTION: no AWS page says how this is billed. We assume each replayed event pays
+   * egress ($0.05 per GB) like any other delivery, and no second ingress.
+   */
+  replayedEvents?: number;
 }
 
 export interface Breakdown {
@@ -75,6 +81,7 @@ export function enhancedMonthly(input: EnhancedInput): Breakdown {
   const ingressGb = (input.eventsPerMonth * billableKb) / 1_000_000;
   const egressGb = ingressGb * input.subscribers;
   const retryGb = egressGb * (input.failureRate ?? 0) * (input.retriesPerFailure ?? 0);
+  const replayGb = ((input.replayedEvents ?? 0) * billableKb) / 1_000_000;
   const evaluations =
     input.eventsPerMonth * chunks * ((input.contentBasedDedup ? 1 : 0) + (input.jsonataSubscribers ?? 0));
   // Same method as the pricing page example: daily GB times the days kept beyond the included first day.
@@ -86,6 +93,7 @@ export function enhancedMonthly(input: EnhancedInput): Breakdown {
     egressRetries: retryGb * ENHANCED.egressPerGb,
     evaluation: (evaluations / 1_000_000) * ENHANCED.evaluationPerMillion,
     storage: storedGb * ENHANCED.retentionPerGbMonth,
+    replay: replayGb * ENHANCED.egressPerGb,
   };
   const out: Breakdown = { total: 0 };
   for (const [k, v] of Object.entries(lines)) out[k] = round2(v);
@@ -124,11 +132,23 @@ export function classicMonthly(input: ClassicInput): Breakdown {
 }
 
 /**
- * Event size, in KB, where the enhanced bus's ingress plus egress (first ingress tier,
- * no evaluation features) costs the same as the Classic bus's $1 per million events.
- * A million events of s KB is s GB, so the enhanced bus costs s * (0.18 + 0.05 * n) dollars.
+ * Event size, in KB, where the enhanced bus (first ingress tier, egress to each
+ * subscriber, and retention past the first day) costs the same as the Classic bus's
+ * $1 per million events. No evaluation features. A million events of s KB is s GB, so
+ * the enhanced bus costs s * (0.18 + 0.05 * n + 0.08 * (days kept - 1) / 30) dollars.
  */
-export function breakEvenKb(subscribers: number): number {
-  const perKbPerMillion = (ENHANCED.ingressTiers[0] as { perGb: number }).perGb + ENHANCED.egressPerGb * subscribers;
+export function breakEvenKb(subscribers: number, retentionDays = 1, daysInMonth = 30): number {
+  const retentionPerGb = (Math.max(0, retentionDays - 1) / daysInMonth) * ENHANCED.retentionPerGbMonth;
+  const perKbPerMillion =
+    (ENHANCED.ingressTiers[0] as { perGb: number }).perGb + ENHANCED.egressPerGb * subscribers + retentionPerGb;
   return CLASSIC.perMillionEvents / perKbPerMillion;
+}
+
+/**
+ * The largest whole-KB event size at which the enhanced bus costs less than the Classic
+ * bus. The enhanced bus bills each event as a whole number of KB, so this is the size
+ * readers can compare with.
+ */
+export function cheaperUpToKb(subscribers: number, retentionDays = 1, daysInMonth = 30): number {
+  return Math.ceil(breakEvenKb(subscribers, retentionDays, daysInMonth)) - 1;
 }
