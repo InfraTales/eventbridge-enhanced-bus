@@ -11,7 +11,10 @@ npm ci
 npm run check        # type check, lint, bundle, unit + infra tests, synth with cdk-nag
 docker run -d --rm -p 8025:8000 amazon/dynamodb-local:3.3.2
 AWS_ENDPOINT_URL_DYNAMODB=http://localhost:8025 npm run test:int
+AWS_ENDPOINT_URL_DYNAMODB=http://localhost:8025 npm run mutate   # 17 mutants; without the variable, 15 run and 2 are skipped
 ```
+
+If you add a safeguard, add a mutant for it in `scripts/mutation-check.ts`.
 
 ## Layout
 
@@ -25,7 +28,7 @@ AWS_ENDPOINT_URL_DYNAMODB=http://localhost:8025 npm run test:int
 | `infra/lib/` | The CDK stack and the typed `AWS::EventsV2` wrappers |
 | `test/unit`, `test/infra` | Tests that run with `npm test` |
 | `test/int` | Tests against DynamoDB Local, including the end-to-end flow |
-| `scripts/` | Bundling, the cost tables and the smoke test |
+| `scripts/` | Bundling, the cost tables, the smoke test and the mutation check |
 
 ## What a change needs
 

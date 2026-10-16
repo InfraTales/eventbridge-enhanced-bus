@@ -33,9 +33,10 @@ jobs:
       - run: npm run check
 
   dynamodb-local:
-    # The ledger's conditional writes and the end-to-end flow, on a real DynamoDB engine.
+    # The ledger's conditional writes and the end-to-end flow, on a real DynamoDB engine,
+    # then the mutation check (two of its mutants need DynamoDB Local).
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     services:
       dynamodb:
         image: amazon/dynamodb-local:3.3.2
@@ -53,3 +54,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:int
+      # Break each safeguard once and check that a test notices.
+      - run: npm run mutate
