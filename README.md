@@ -15,6 +15,10 @@ publisher Lambda --PutEvents--> enhanced bus (7-day retention)
                                                                failures -> dead-letter queue
 ```
 
+## Architecture
+
+![Publisher sends events to an enhanced EventBridge bus. It feeds a FIFO ledger and a queue.](docs/architecture.png)
+
 ## What the code shows
 
 | Problem | What this repo does | Where |
