@@ -1,6 +1,6 @@
 # Ordered, deduplicated, replayable events on the enhanced EventBridge bus
 
-A tested AWS CDK app for the enhanced Amazon EventBridge custom event bus that AWS launched in September 2026 (the `eventsv2` API). One publisher sends order events. Two subscribers read them:
+A tested AWS CDK app for the enhanced Amazon EventBridge custom event bus (the `eventsv2` API). AWS [announced it on 24 September 2026](https://aws.amazon.com/about-aws/whats-new/2026/09/eventbridge-relaunches-custom-event-buses/) in 14 Regions. One publisher sends order events. Two subscribers read them:
 
 - **ledger**: a FIFO subscriber. It calls an AWS Lambda function and waits for it to return, one order's events at a time and in order, and the function keeps each order's latest state in Amazon DynamoDB.
 - **analytics**: an unordered subscriber. It reshapes each event with JSONata and drops it on an Amazon SQS queue.

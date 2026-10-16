@@ -1,4 +1,4 @@
-import { breakEvenKb, classicMonthly, enhancedMonthly, ingressCost } from '../../src/cost/model';
+import { breakEvenKb, cheaperUpToKb, classicMonthly, enhancedMonthly, ingressCost } from '../../src/cost/model';
 
 test('reproduces the worked example on the EventBridge pricing page', () => {
   // 1,000 events/s at 2 KB, 2 subscriptions (one JSONata), dedup on, 7-day retention,
@@ -48,4 +48,27 @@ test('ingress tiers apply in order', () => {
 test('break-even size falls as subscribers grow', () => {
   expect(breakEvenKb(2)).toBeCloseTo(1 / 0.28, 6);
   expect(breakEvenKb(10)).toBeCloseTo(1 / 0.68, 6);
+});
+
+test('break-even counts retention past the first day', () => {
+  // 7 days kept: 6 extra days of each GB at $0.08 per GB-month adds 0.016 per KB per million.
+  expect(breakEvenKb(2, 7)).toBeCloseTo(1 / 0.296, 6);
+  expect(breakEvenKb(2, 1)).toBeCloseTo(1 / 0.28, 6);
+});
+
+test('with two subscribers and 7 days kept, the enhanced bus is cheaper up to 3 KB billed', () => {
+  expect(cheaperUpToKb(2, 7)).toBe(3);
+  const at = (kb: number) => enhancedMonthly({ eventsPerMonth: 1_000_000, avgEventKb: kb, subscribers: 2, retentionDays: 7 }).total;
+  expect(at(3)).toBeLessThan(1);
+  expect(at(4)).toBeGreaterThan(1);
+});
+
+test('replaying the last 7 days: enhanced billed as egress (assumed), Classic as new events', () => {
+  const replayed = (10_000_000 * 7) / 30;
+  const e = enhancedMonthly({ eventsPerMonth: 10_000_000, avgEventKb: 1, subscribers: 2, retentionDays: 7, replayedEvents: replayed });
+  expect(e.replay).toBe(0.12); // 2.33 GB x $0.05
+  expect(e.total).toBe(3.08);
+  const c = classicMonthly({ eventsPerMonth: 10_000_000, avgEventKb: 1, archive: true, archiveMonthsKept: 7 / 30, replayedEvents: replayed });
+  expect(c.replay).toBe(2.33);
+  expect(c.total).toBe(13.34);
 });

@@ -19,26 +19,28 @@ The Classic bus charges $1.00 per million custom events, where each 64 KB chunk 
 
 ## This stack at 10 million events a month
 
-The table below comes from `npm run cost`. It assumes two same-account subscribers and 7 days of retention, and leaves out Lambda, SQS and DynamoDB:
+The table below comes from `npm run cost`. It assumes two same-account subscribers and 7 days of retention, and leaves out Lambda, SQS and DynamoDB. "Replay" means reading the last 7 days again (about 2.33 million events), because neither bus holds more than that here: the enhanced bus keeps 7 days, and the Classic archive is priced for 7 days too.
 
-| Event size | Enhanced | Enhanced + JSONata on one subscriber | Classic | Classic + archive and one full replay |
-|---|---|---|---|---|
-| 1 KB | $2.96 | $4.46 | $10.00 | $21.00 |
-| 2 KB | $5.92 | $7.42 | $10.00 | $22.01 |
-| 4 KB | $11.84 | $13.34 | $10.00 | $24.02 |
-| 16 KB | $47.36 | $48.86 | $10.00 | $36.08 |
-| 64 KB | $189.44 | $190.94 | $10.00 | $84.31 |
+| Event size | Enhanced | Enhanced + JSONata on one subscriber | Enhanced + replay of 7 days | Classic | Classic + 7-day archive and replay of 7 days |
+|---|---|---|---|---|---|
+| 1 KB | $2.96 | $4.46 | $3.08 | $10.00 | $13.34 |
+| 2 KB | $5.92 | $7.42 | $6.15 | $10.00 | $14.34 |
+| 4 KB | $11.84 | $13.34 | $12.31 | $10.00 | $16.35 |
+| 16 KB | $47.36 | $48.86 | $49.23 | $10.00 | $28.41 |
+| 64 KB | $189.44 | $190.94 | $196.91 | $10.00 | $76.64 |
 
-The enhanced bus charges by size, and the Classic bus charges by count. A million events of S KB is S GB, so with N subscribers the enhanced bus costs S x (0.18 + 0.05 x N) dollars per million events in the first ingress tier. That equals the Classic bus's $1.00 at:
+No AWS page says how a replay on the enhanced bus is billed. The model assumes a replaying subscriber pays egress, $0.05 per GB, like any other delivery, and no second ingress. The Classic pricing page says replayed events are "billed as per the custom events pricing".
 
-| Subscribers | Break-even event size |
-|---|---|
-| 1 | 4.35 KB |
-| 2 | 3.57 KB |
-| 5 | 2.33 KB |
-| 10 | 1.47 KB |
+The enhanced bus charges by size, and the Classic bus charges by count. A million events of S KB is S GB, so with N subscribers and D days kept the enhanced bus costs S x (0.18 + 0.05 x N + 0.08 x (D - 1) / 30) dollars per million events in the first ingress tier. That equals the Classic bus's $1.00 at:
 
-Below that size the enhanced bus costs less, before you count retention and evaluation features. Above it the Classic bus costs less, unless you need ordering, deduplication, or retention you'd otherwise build yourself.
+| Subscribers | 1 day kept | 7 days kept | Enhanced cheaper up to (billed size, 7 days) |
+|---|---|---|---|
+| 1 | 4.35 KB | 4.07 KB | 4 KB |
+| 2 | 3.57 KB | 3.38 KB | 3 KB |
+| 5 | 2.33 KB | 2.24 KB | 2 KB |
+| 10 | 1.47 KB | 1.44 KB | 1 KB |
+
+The enhanced bus bills each event as a whole number of KB, so the last column is the one to compare with. At or below that size the enhanced bus costs less, before you count evaluation features. Above it the Classic bus costs less, unless you need ordering, deduplication, or retention you'd otherwise build yourself.
 
 ## Checking the model
 
