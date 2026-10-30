@@ -22,17 +22,17 @@
     "mutate": "npm run bundle && ts-node scripts/mutation-check.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.1152.0",
-    "@aws-sdk/client-eventbridgev2": "^3.1152.0",
-    "@aws-sdk/lib-dynamodb": "^3.1152.0",
+    "@aws-sdk/client-dynamodb": "^3.1156.0",
+    "@aws-sdk/client-eventbridgev2": "^3.1156.0",
+    "@aws-sdk/lib-dynamodb": "^3.1156.0",
     "aws-cdk-lib": "^2.273.0",
     "cdk-nag": "^3.0.2",
     "constructs": "^10.8.1"
   },
   "devDependencies": {
-    "@aws-sdk/client-cloudformation": "^3.1152.0",
-    "@aws-sdk/client-lambda": "^3.1152.0",
-    "@aws-sdk/client-sqs": "^3.1152.0",
+    "@aws-sdk/client-cloudformation": "^3.1156.0",
+    "@aws-sdk/client-lambda": "^3.1156.0",
+    "@aws-sdk/client-sqs": "^3.1156.0",
     "@eslint/js": "^10.0.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.19.2",
